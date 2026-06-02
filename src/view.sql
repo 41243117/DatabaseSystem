@@ -1,372 +1,570 @@
 -- ===========================================
 -- views.sql
--- 二手交易平台 View 與權限設定
--- 資料庫名稱：secondhand_shop
--- 使用資料表：Buyer、Seller、Product、Orders、Payment、Shipment、Review
+-- 二手物品交易平台 View 與權限設定
+-- 完整依照 ER Diagram 設計
 -- ===========================================
 
--- ===========================================
--- 使用資料庫
--- ===========================================
 USE secondhand_shop;
 
 -- ===========================================
 -- 建立帳號（如已建立則跳過）
 -- ===========================================
-CREATE USER IF NOT EXISTS 'buyer_user'@'localhost' IDENTIFIED BY 'test_buyer_0000';
+CREATE USER IF NOT EXISTS 'buyer_user'@'localhost'
+IDENTIFIED BY 'test_buyer_0000';
 
-CREATE USER IF NOT EXISTS 'seller_user'@'localhost' IDENTIFIED BY 'test_seller_0000';
+CREATE USER IF NOT EXISTS 'seller_user'@'localhost'
+IDENTIFIED BY 'test_seller_0000';
 
-CREATE USER IF NOT EXISTS 'admin_user'@'localhost' IDENTIFIED BY 'test_admin_0000';
+CREATE USER IF NOT EXISTS 'admin_user'@'localhost'
+IDENTIFIED BY 'test_admin_0000';
 
 -- ===========================================
--- 買家 view：主儀表板
--- 功能：串聯買家個人資料、訂單、商品、付款、出貨與評價
--- 注意：實際查詢時可加 WHERE BuyerID = 指定買家編號
+-- 買家 view：商品瀏覽
+-- 買家只能看到上架中的商品
 -- ===========================================
-CREATE OR REPLACE VIEW view_buyer_dashboard AS
+CREATE OR REPLACE VIEW view_buyer_product_list AS
 SELECT
-    b.BuyerID,
-    b.Name AS BuyerName,
-    b.Email AS BuyerEmail,
-    b.Phone AS BuyerPhone,
-    b.Address AS BuyerAddress,
-    b.RegisterDate,
+    p.pID,
+    p.pName,
+    p.description,
+    p.price,
+    p.pCondition,
+    p.pStatus,
+    p.postDate,
 
-    o.OrderID,
-    o.OrderDate,
-    o.TotalAmount,
-    o.OrderStatus,
+    c.cID,
+    c.cName AS CategoryName,
+    c.cDescription,
 
-    p.ProductID,
-    p.ProductName,
-    p.Category AS ProductCategory,
-    p.Price AS ProductPrice,
-    p.Description AS ProductDescription,
-    p.Status AS ProductStatus,
-
-    s.SellerID,
-    s.Name AS SellerName,
-
-    pay.PaymentID,
-    pay.PaymentMethod,
-    pay.Amount AS PaymentAmount,
-    pay.PaymentDate,
-    pay.InvoiceNo,
-
-    sh.ShipmentID,
-    sh.LogisticsCompany,
-    sh.TrackingNo,
-    sh.ShipDate,
-    sh.Status AS ShipmentStatus,
-
-    r.ReviewID,
-    r.Rating AS ReviewRating,
-    r.Comment AS ReviewComment,
-    r.ReviewDate
-FROM
-    Buyer b
-    LEFT JOIN `Orders` o ON b.BuyerID = o.BuyerID
-    LEFT JOIN Product p ON o.ProductID = p.ProductID
-    LEFT JOIN Seller s ON p.SellerID = s.SellerID
-    LEFT JOIN Payment pay ON o.OrderID = pay.OrderID
-    LEFT JOIN Shipment sh ON o.OrderID = sh.OrderID
-    LEFT JOIN Review r ON o.OrderID = r.OrderID;
-
--- ===========================================
--- 買家 view：可購買商品列表
--- 功能：只顯示目前狀態為「上架中」的商品
--- ===========================================
-CREATE OR REPLACE VIEW view_buyer_available_products AS
-SELECT
-    p.ProductID,
-    p.ProductName,
-    p.Category AS ProductCategory,
-    p.Price AS ProductPrice,
-    p.Description AS ProductDescription,
-    p.Status AS ProductStatus,
-
-    s.SellerID,
-    s.Name AS SellerName
+    seller.mID AS SellerID,
+    seller.mAccount AS SellerAccount,
+    seller.mName AS SellerName,
+    seller.mEmail AS SellerEmail
 FROM
     Product p
-    JOIN Seller s ON p.SellerID = s.SellerID
+    JOIN Member seller ON p.mID = seller.mID
+    JOIN Category c ON p.cID = c.cID
 WHERE
-    p.Status = '上架中';
+    p.pStatus = '上架中'
+    AND seller.mRole = '賣家';
 
 -- ===========================================
--- 賣家 view：主儀表板
--- 功能：串聯賣家個人資料、刊登商品、買家訂單、付款與出貨資訊
--- 注意：實際查詢時可加 WHERE SellerID = 指定賣家編號
+-- 買家 view：買家訂單查詢
+-- 買家可看自己的訂單、商品、付款、物流狀態
+-- 實際查詢時可加 WHERE BuyerID = 自己的 mID
 -- ===========================================
-CREATE OR REPLACE VIEW view_seller_dashboard AS
+CREATE OR REPLACE VIEW view_buyer_order_status AS
 SELECT
-    s.SellerID,
-    s.Name AS SellerName,
-    s.Email AS SellerEmail,
-    s.Phone AS SellerPhone,
-    s.Address AS SellerAddress,
+    buyer.mID AS BuyerID,
+    buyer.mAccount AS BuyerAccount,
+    buyer.mName AS BuyerName,
+    buyer.mEmail AS BuyerEmail,
+    buyer.mPhone AS BuyerPhone,
 
-    p.ProductID,
-    p.ProductName,
-    p.Category AS ProductCategory,
-    p.Price AS ProductPrice,
-    p.Description AS ProductDescription,
-    p.Status AS ProductStatus,
+    o.oID,
+    o.oDate,
+    o.oStatus,
+    o.totalAmount,
 
-    o.OrderID,
-    o.OrderDate,
-    o.TotalAmount,
-    o.OrderStatus,
+    od.odID,
+    od.quantity,
+    od.dealPrice,
 
-    b.BuyerID,
-    b.Name AS BuyerName,
+    p.pID,
+    p.pName,
+    p.price,
+    p.pCondition,
+    p.pStatus,
 
-    pay.PaymentID,
-    pay.PaymentMethod,
-    pay.Amount AS PaymentAmount,
-    pay.PaymentDate,
-    pay.InvoiceNo,
+    seller.mID AS SellerID,
+    seller.mName AS SellerName,
+    seller.mEmail AS SellerEmail,
 
-    sh.ShipmentID,
-    sh.LogisticsCompany,
-    sh.TrackingNo,
-    sh.ShipDate,
-    sh.Status AS ShipmentStatus
+    i.iID,
+    i.iDate,
+    i.amount AS InvoiceAmount,
+    i.paymentStatus,
+
+    pm.pmID,
+    pm.methodName AS PaymentMethod,
+
+    sh.sID,
+    sh.sDate,
+    sh.sStatus,
+
+    sm.smID,
+    sm.methodName AS ShipmentMethod
 FROM
-    Seller s
-    LEFT JOIN Product p ON s.SellerID = p.SellerID
-    LEFT JOIN `Orders` o ON p.ProductID = o.ProductID
-    LEFT JOIN Buyer b ON o.BuyerID = b.BuyerID
-    LEFT JOIN Payment pay ON o.OrderID = pay.OrderID
-    LEFT JOIN Shipment sh ON o.OrderID = sh.OrderID;
+    Member buyer
+    JOIN `Order` o ON buyer.mID = o.mID
+    JOIN OrderDetail od ON o.oID = od.oID
+    JOIN Product p ON od.pID = p.pID
+    JOIN Member seller ON p.mID = seller.mID
+    LEFT JOIN Invoice i ON o.oID = i.oID
+    LEFT JOIN PaymentMethod pm ON i.pmID = pm.pmID
+    LEFT JOIN Shipment sh ON od.sID = sh.sID
+    LEFT JOIN ShipmentMethod sm ON sh.smID = sm.smID
+WHERE
+    buyer.mRole = '買家'
+    AND seller.mRole = '賣家';
 
 -- ===========================================
--- 管理員 view：全站交易總覽儀表板
--- 功能：查看所有訂單、買家、賣家、商品、付款、出貨與評價資料
+-- 買家 view：評價紀錄
+-- Member Write Review，Review Receives Order
 -- ===========================================
-CREATE OR REPLACE VIEW view_admin_dashboard AS
+CREATE OR REPLACE VIEW view_buyer_review_history AS
 SELECT
-    o.OrderID,
-    o.OrderDate,
-    o.TotalAmount,
-    o.OrderStatus,
+    r.rID,
+    r.score,
+    r.comment,
+    r.rDate,
 
-    b.BuyerID,
-    b.Name AS BuyerName,
-    b.Email AS BuyerEmail,
+    reviewer.mID AS ReviewerID,
+    reviewer.mAccount AS ReviewerAccount,
+    reviewer.mName AS ReviewerName,
+    reviewer.mRole AS ReviewerRole,
 
-    s.SellerID,
-    s.Name AS SellerName,
-    s.Email AS SellerEmail,
+    o.oID,
+    o.oDate,
+    o.oStatus,
 
-    p.ProductID,
-    p.ProductName,
-    p.Category AS ProductCategory,
-    p.Price AS ProductPrice,
-    p.Description AS ProductDescription,
-    p.Status AS ProductStatus,
+    p.pID,
+    p.pName,
 
-    pay.PaymentID,
-    pay.PaymentMethod,
-    pay.Amount AS PaymentAmount,
-    pay.PaymentDate,
-    pay.InvoiceNo,
-
-    sh.ShipmentID,
-    sh.LogisticsCompany,
-    sh.TrackingNo,
-    sh.ShipDate,
-    sh.Status AS ShipmentStatus,
-
-    r.ReviewID,
-    r.Rating AS ReviewRating,
-    r.Comment AS ReviewComment,
-    r.ReviewDate
+    seller.mID AS SellerID,
+    seller.mName AS SellerName
 FROM
-    `Orders` o
-    JOIN Buyer b ON o.BuyerID = b.BuyerID
-    JOIN Product p ON o.ProductID = p.ProductID
-    JOIN Seller s ON p.SellerID = s.SellerID
-    LEFT JOIN Payment pay ON o.OrderID = pay.OrderID
-    LEFT JOIN Shipment sh ON o.OrderID = sh.OrderID
-    LEFT JOIN Review r ON o.OrderID = r.OrderID;
+    Review r
+    JOIN Member reviewer ON r.mID = reviewer.mID
+    JOIN `Order` o ON r.oID = o.oID
+    JOIN OrderDetail od ON o.oID = od.oID
+    JOIN Product p ON od.pID = p.pID
+    JOIN Member seller ON p.mID = seller.mID
+WHERE
+    reviewer.mRole = '買家';
 
 -- ===========================================
--- 商品可購買狀態 view
--- 功能：依商品狀態判斷是否可以購買
+-- 賣家 view：商品管理
+-- 賣家查看自己刊登的商品
+-- ===========================================
+CREATE OR REPLACE VIEW view_seller_product_manage AS
+SELECT
+    seller.mID AS SellerID,
+    seller.mAccount AS SellerAccount,
+    seller.mName AS SellerName,
+    seller.mEmail AS SellerEmail,
+    seller.mPhone AS SellerPhone,
+
+    p.pID,
+    p.pName,
+    p.description,
+    p.price,
+    p.pCondition,
+    p.pStatus,
+    p.postDate,
+
+    c.cID,
+    c.cName AS CategoryName,
+    c.cDescription
+FROM
+    Member seller
+    JOIN Product p ON seller.mID = p.mID
+    JOIN Category c ON p.cID = c.cID
+WHERE
+    seller.mRole = '賣家';
+
+-- ===========================================
+-- 賣家 view：訂單管理
+-- 賣家查看自己的商品被下單後的訂單、付款、出貨狀態
+-- ===========================================
+CREATE OR REPLACE VIEW view_seller_order_manage AS
+SELECT
+    seller.mID AS SellerID,
+    seller.mAccount AS SellerAccount,
+    seller.mName AS SellerName,
+    seller.mEmail AS SellerEmail,
+
+    p.pID,
+    p.pName,
+    p.price,
+    p.pCondition,
+    p.pStatus,
+
+    od.odID,
+    od.quantity,
+    od.dealPrice,
+
+    o.oID,
+    o.oDate,
+    o.oStatus,
+    o.totalAmount,
+
+    buyer.mID AS BuyerID,
+    buyer.mName AS BuyerName,
+    buyer.mEmail AS BuyerEmail,
+    buyer.mPhone AS BuyerPhone,
+
+    i.iID,
+    i.iDate,
+    i.amount AS InvoiceAmount,
+    i.paymentStatus,
+
+    pm.pmID,
+    pm.methodName AS PaymentMethod,
+
+    sh.sID,
+    sh.sDate,
+    sh.sStatus,
+
+    sm.smID,
+    sm.methodName AS ShipmentMethod
+FROM
+    Member seller
+    JOIN Product p ON seller.mID = p.mID
+    JOIN OrderDetail od ON p.pID = od.pID
+    JOIN `Order` o ON od.oID = o.oID
+    JOIN Member buyer ON o.mID = buyer.mID
+    LEFT JOIN Invoice i ON o.oID = i.oID
+    LEFT JOIN PaymentMethod pm ON i.pmID = pm.pmID
+    LEFT JOIN Shipment sh ON od.sID = sh.sID
+    LEFT JOIN ShipmentMethod sm ON sh.smID = sm.smID
+WHERE
+    seller.mRole = '賣家'
+    AND buyer.mRole = '買家';
+
+-- ===========================================
+-- 賣家 view：收到的評價
+-- 用賣家商品所屬訂單取得評價
+-- ===========================================
+CREATE OR REPLACE VIEW view_seller_review_received AS
+SELECT
+    seller.mID AS SellerID,
+    seller.mName AS SellerName,
+
+    r.rID,
+    r.score,
+    r.comment,
+    r.rDate,
+
+    reviewer.mID AS ReviewerID,
+    reviewer.mName AS ReviewerName,
+    reviewer.mRole AS ReviewerRole,
+
+    o.oID,
+    p.pID,
+    p.pName
+FROM
+    Member seller
+    JOIN Product p ON seller.mID = p.mID
+    JOIN OrderDetail od ON p.pID = od.pID
+    JOIN `Order` o ON od.oID = o.oID
+    JOIN Review r ON o.oID = r.oID
+    JOIN Member reviewer ON r.mID = reviewer.mID
+WHERE
+    seller.mRole = '賣家';
+
+-- ===========================================
+-- 管理員 view：會員清單
+-- ===========================================
+CREATE OR REPLACE VIEW view_admin_member_list AS
+SELECT
+    mID,
+    mAccount,
+    mName,
+    mEmail,
+    mPhone,
+    mRole,
+    mCreateDate
+FROM
+    Member;
+
+-- ===========================================
+-- 管理員 view：全站交易總覽
+-- 管理員可查看訂單、商品、會員、付款、物流、評價
+-- ===========================================
+CREATE OR REPLACE VIEW view_admin_trade_dashboard AS
+SELECT
+    o.oID,
+    o.oDate,
+    o.oStatus,
+    o.totalAmount,
+
+    buyer.mID AS BuyerID,
+    buyer.mName AS BuyerName,
+    buyer.mEmail AS BuyerEmail,
+
+    seller.mID AS SellerID,
+    seller.mName AS SellerName,
+    seller.mEmail AS SellerEmail,
+
+    p.pID,
+    p.pName,
+    p.price,
+    p.pCondition,
+    p.pStatus,
+
+    c.cID,
+    c.cName AS CategoryName,
+
+    od.odID,
+    od.quantity,
+    od.dealPrice,
+
+    i.iID,
+    i.iDate,
+    i.amount AS InvoiceAmount,
+    i.paymentStatus,
+
+    pm.pmID,
+    pm.methodName AS PaymentMethod,
+
+    sh.sID,
+    sh.sDate,
+    sh.sStatus,
+
+    sm.smID,
+    sm.methodName AS ShipmentMethod,
+
+    r.rID,
+    r.score,
+    r.comment,
+    r.rDate,
+
+    reviewer.mID AS ReviewerID,
+    reviewer.mName AS ReviewerName,
+    reviewer.mRole AS ReviewerRole
+FROM
+    `Order` o
+    JOIN Member buyer ON o.mID = buyer.mID
+    JOIN OrderDetail od ON o.oID = od.oID
+    JOIN Product p ON od.pID = p.pID
+    JOIN Member seller ON p.mID = seller.mID
+    JOIN Category c ON p.cID = c.cID
+    LEFT JOIN Invoice i ON o.oID = i.oID
+    LEFT JOIN PaymentMethod pm ON i.pmID = pm.pmID
+    LEFT JOIN Shipment sh ON od.sID = sh.sID
+    LEFT JOIN ShipmentMethod sm ON sh.smID = sm.smID
+    LEFT JOIN Review r ON o.oID = r.oID
+    LEFT JOIN Member reviewer ON r.mID = reviewer.mID;
+
+-- ===========================================
+-- 商品狀態 view
+-- 判斷商品是否可購買
 -- ===========================================
 CREATE OR REPLACE VIEW view_product_status AS
 SELECT
-    ProductID,
-    ProductName,
-    Category,
-    Price,
-    Description,
-    Status AS ProductStatus,
+    p.pID,
+    p.pName,
+    p.price,
+    p.pCondition,
+    p.pStatus,
+
+    c.cID,
+    c.cName AS CategoryName,
+
+    seller.mID AS SellerID,
+    seller.mName AS SellerName,
+
     CASE
-        WHEN Status = '上架中' THEN '可購買'
-        WHEN Status = '已售出' THEN '已售出'
-        WHEN Status = '已下架' THEN '不可購買'
+        WHEN p.pStatus = '上架中' THEN '可購買'
+        WHEN p.pStatus = '已售出' THEN '已售出'
+        WHEN p.pStatus = '已下架' THEN '不可購買'
         ELSE '狀態異常'
     END AS BuyStatus
 FROM
-    Product;
-
--- ===========================================
--- 常用分組 GROUP BY 與 HAVING 查詢 view
--- ===========================================
-
--- ===========================================
--- 每個買家的訂單數量
--- ===========================================
-CREATE OR REPLACE VIEW view_buyer_order_count AS
-SELECT
-    b.BuyerID,
-    b.Name AS BuyerName,
-    COUNT(o.OrderID) AS OrderCount
-FROM
-    Buyer b
-    LEFT JOIN `Orders` o ON b.BuyerID = o.BuyerID
-GROUP BY
-    b.BuyerID,
-    b.Name;
-
--- ===========================================
--- 訂單超過 2 次的活躍買家
--- ===========================================
-CREATE OR REPLACE VIEW view_buyer_order_gt2 AS
-SELECT
-    b.BuyerID,
-    b.Name AS BuyerName,
-    COUNT(o.OrderID) AS OrderCount
-FROM
-    Buyer b
-    JOIN `Orders` o ON b.BuyerID = o.BuyerID
-GROUP BY
-    b.BuyerID,
-    b.Name
-HAVING
-    COUNT(o.OrderID) > 2;
-
--- ===========================================
--- 每件商品被下單次數
--- ===========================================
-CREATE OR REPLACE VIEW view_product_order_count AS
-SELECT
-    p.ProductID,
-    p.ProductName,
-    COUNT(o.OrderID) AS OrderCount
-FROM
     Product p
-    LEFT JOIN `Orders` o ON p.ProductID = o.ProductID
-GROUP BY
-    p.ProductID,
-    p.ProductName;
+    JOIN Category c ON p.cID = c.cID
+    JOIN Member seller ON p.mID = seller.mID;
 
 -- ===========================================
--- 每位賣家刊登商品數量
+-- 統計 view：每個分類的商品數量
+-- ===========================================
+CREATE OR REPLACE VIEW view_category_product_count AS
+SELECT
+    c.cID,
+    c.cName AS CategoryName,
+    COUNT(p.pID) AS ProductCount
+FROM
+    Category c
+    LEFT JOIN Product p ON c.cID = p.cID
+GROUP BY
+    c.cID,
+    c.cName;
+
+-- ===========================================
+-- 統計 view：每位賣家刊登商品數量
 -- ===========================================
 CREATE OR REPLACE VIEW view_seller_product_count AS
 SELECT
-    s.SellerID,
-    s.Name AS SellerName,
-    COUNT(p.ProductID) AS ProductCount
+    seller.mID AS SellerID,
+    seller.mName AS SellerName,
+    COUNT(p.pID) AS ProductCount
 FROM
-    Seller s
-    LEFT JOIN Product p ON s.SellerID = p.SellerID
+    Member seller
+    LEFT JOIN Product p ON seller.mID = p.mID
+WHERE
+    seller.mRole = '賣家'
 GROUP BY
-    s.SellerID,
-    s.Name;
+    seller.mID,
+    seller.mName;
 
 -- ===========================================
--- 每件商品的平均評分
+-- 統計 view：每位買家的訂單數量
+-- ===========================================
+CREATE OR REPLACE VIEW view_buyer_order_count AS
+SELECT
+    buyer.mID AS BuyerID,
+    buyer.mName AS BuyerName,
+    COUNT(o.oID) AS OrderCount
+FROM
+    Member buyer
+    LEFT JOIN `Order` o ON buyer.mID = o.mID
+WHERE
+    buyer.mRole = '買家'
+GROUP BY
+    buyer.mID,
+    buyer.mName;
+
+-- ===========================================
+-- HAVING view：訂單超過 2 筆的買家
+-- ===========================================
+CREATE OR REPLACE VIEW view_buyer_order_gt2 AS
+SELECT
+    buyer.mID AS BuyerID,
+    buyer.mName AS BuyerName,
+    COUNT(o.oID) AS OrderCount
+FROM
+    Member buyer
+    JOIN `Order` o ON buyer.mID = o.mID
+WHERE
+    buyer.mRole = '買家'
+GROUP BY
+    buyer.mID,
+    buyer.mName
+HAVING
+    COUNT(o.oID) > 2;
+
+-- ===========================================
+-- 統計 view：每件商品被下單次數
+-- ER 圖中一個商品最多出現在一筆 OrderDetail，所以通常是 0 或 1
+-- ===========================================
+CREATE OR REPLACE VIEW view_product_order_count AS
+SELECT
+    p.pID,
+    p.pName,
+    COUNT(od.odID) AS OrderCount
+FROM
+    Product p
+    LEFT JOIN OrderDetail od ON p.pID = od.pID
+GROUP BY
+    p.pID,
+    p.pName;
+
+-- ===========================================
+-- 統計 view：每件商品平均評分
 -- ===========================================
 CREATE OR REPLACE VIEW view_product_avg_rating AS
 SELECT
-    p.ProductID,
-    p.ProductName,
-    AVG(r.Rating) AS AvgRating,
-    COUNT(r.ReviewID) AS RatingCount
+    p.pID,
+    p.pName,
+    AVG(r.score) AS AvgRating,
+    COUNT(r.rID) AS RatingCount
 FROM
     Product p
-    JOIN `Orders` o ON p.ProductID = o.ProductID
-    JOIN Review r ON o.OrderID = r.OrderID
+    JOIN OrderDetail od ON p.pID = od.pID
+    JOIN `Order` o ON od.oID = o.oID
+    JOIN Review r ON o.oID = r.oID
 GROUP BY
-    p.ProductID,
-    p.ProductName
+    p.pID,
+    p.pName
 HAVING
-    COUNT(r.ReviewID) > 0;
+    COUNT(r.rID) > 0;
 
 -- ===========================================
--- 每位賣家的平均評分
--- 功能：透過賣家商品的訂單評價計算賣家評分
+-- 統計 view：每位賣家的平均評分
 -- ===========================================
 CREATE OR REPLACE VIEW view_seller_avg_rating AS
 SELECT
-    s.SellerID,
-    s.Name AS SellerName,
-    AVG(r.Rating) AS AvgRating,
-    COUNT(r.ReviewID) AS RatingCount
+    seller.mID AS SellerID,
+    seller.mName AS SellerName,
+    AVG(r.score) AS AvgRating,
+    COUNT(r.rID) AS RatingCount
 FROM
-    Seller s
-    JOIN Product p ON s.SellerID = p.SellerID
-    JOIN `Orders` o ON p.ProductID = o.ProductID
-    JOIN Review r ON o.OrderID = r.OrderID
+    Member seller
+    JOIN Product p ON seller.mID = p.mID
+    JOIN OrderDetail od ON p.pID = od.pID
+    JOIN `Order` o ON od.oID = o.oID
+    JOIN Review r ON o.oID = r.oID
+WHERE
+    seller.mRole = '賣家'
 GROUP BY
-    s.SellerID,
-    s.Name
+    seller.mID,
+    seller.mName
 HAVING
-    COUNT(r.ReviewID) > 0;
+    COUNT(r.rID) > 0;
 
 -- ===========================================
--- 每種付款方式使用次數
+-- 統計 view：每種付款方式使用次數
 -- ===========================================
 CREATE OR REPLACE VIEW view_payment_method_count AS
 SELECT
-    PaymentMethod,
-    COUNT(PaymentID) AS UsedCount
+    pm.pmID,
+    pm.methodName AS PaymentMethod,
+    COUNT(i.iID) AS UsedCount
 FROM
-    Payment
+    PaymentMethod pm
+    LEFT JOIN Invoice i ON pm.pmID = i.pmID
 GROUP BY
-    PaymentMethod;
+    pm.pmID,
+    pm.methodName;
 
 -- ===========================================
--- 每種出貨狀態的數量
+-- 統計 view：每種物流方式使用次數
 -- ===========================================
-CREATE OR REPLACE VIEW view_shipment_status_count AS
+CREATE OR REPLACE VIEW view_shipment_method_count AS
 SELECT
-    Status AS ShipmentStatus,
-    COUNT(ShipmentID) AS ShipmentCount
+    sm.smID,
+    sm.methodName AS ShipmentMethod,
+    COUNT(sh.sID) AS UsedCount
 FROM
-    Shipment
+    ShipmentMethod sm
+    LEFT JOIN Shipment sh ON sm.smID = sh.smID
 GROUP BY
-    Status;
+    sm.smID,
+    sm.methodName;
 
 -- ===========================================
 -- 權限設定
 -- ===========================================
 
--- ===========================================
 -- 買家權限
--- ===========================================
 GRANT SELECT
-ON secondhand_shop.view_buyer_dashboard
+ON secondhand_shop.view_buyer_product_list
 TO 'buyer_user'@'localhost';
 
 GRANT SELECT
-ON secondhand_shop.view_buyer_available_products
+ON secondhand_shop.view_buyer_order_status
+TO 'buyer_user'@'localhost';
+
+GRANT SELECT
+ON secondhand_shop.view_buyer_review_history
 TO 'buyer_user'@'localhost';
 
 GRANT SELECT
 ON secondhand_shop.view_product_status
 TO 'buyer_user'@'localhost';
 
--- ===========================================
 -- 賣家權限
--- ===========================================
 GRANT SELECT
-ON secondhand_shop.view_seller_dashboard
+ON secondhand_shop.view_seller_product_manage
+TO 'seller_user'@'localhost';
+
+GRANT SELECT
+ON secondhand_shop.view_seller_order_manage
+TO 'seller_user'@'localhost';
+
+GRANT SELECT
+ON secondhand_shop.view_seller_review_received
 TO 'seller_user'@'localhost';
 
 GRANT SELECT
@@ -377,15 +575,25 @@ GRANT SELECT
 ON secondhand_shop.view_product_status
 TO 'seller_user'@'localhost';
 
--- ===========================================
 -- 管理員權限
--- ===========================================
 GRANT SELECT
-ON secondhand_shop.view_admin_dashboard
+ON secondhand_shop.view_admin_member_list
+TO 'admin_user'@'localhost';
+
+GRANT SELECT
+ON secondhand_shop.view_admin_trade_dashboard
 TO 'admin_user'@'localhost';
 
 GRANT SELECT
 ON secondhand_shop.view_product_status
+TO 'admin_user'@'localhost';
+
+GRANT SELECT
+ON secondhand_shop.view_category_product_count
+TO 'admin_user'@'localhost';
+
+GRANT SELECT
+ON secondhand_shop.view_seller_product_count
 TO 'admin_user'@'localhost';
 
 GRANT SELECT
@@ -401,10 +609,6 @@ ON secondhand_shop.view_product_order_count
 TO 'admin_user'@'localhost';
 
 GRANT SELECT
-ON secondhand_shop.view_seller_product_count
-TO 'admin_user'@'localhost';
-
-GRANT SELECT
 ON secondhand_shop.view_product_avg_rating
 TO 'admin_user'@'localhost';
 
@@ -417,11 +621,7 @@ ON secondhand_shop.view_payment_method_count
 TO 'admin_user'@'localhost';
 
 GRANT SELECT
-ON secondhand_shop.view_shipment_status_count
+ON secondhand_shop.view_shipment_method_count
 TO 'admin_user'@'localhost';
 
--- ===========================================
--- 重新整理權限
--- ===========================================
 FLUSH PRIVILEGES;
-
