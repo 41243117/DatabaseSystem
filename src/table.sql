@@ -4,268 +4,240 @@ COLLATE utf8mb4_unicode_ci;
 
 USE secondhand_platform;
 
--- ==========================================
+-- ===========================
 -- Member
--- ==========================================
+-- ===========================
 
 CREATE TABLE Member (
-mID INT PRIMARY KEY,
-mAccount VARCHAR(30) NOT NULL,
-mName VARCHAR(50) NOT NULL,
-mEmail VARCHAR(100) NOT NULL,
-mPhone VARCHAR(10) NOT NULL,
-mRole ENUM('買家','賣家') NOT NULL,
-createDate DATE NOT NULL,
+    mID INT PRIMARY KEY,
+    mAccount VARCHAR(30) NOT NULL,
+    mName VARCHAR(50) NOT NULL,
+    mEmail VARCHAR(100) NOT NULL,
+    mPhone VARCHAR(10) NOT NULL,
+    mRole ENUM('買家','賣家') NOT NULL,
+    mCreateDate DATE NOT NULL,
 
-```
-UNIQUE (mAccount),
-UNIQUE (mEmail),
+    UNIQUE (mAccount),
+    UNIQUE (mEmail),
 
-CHECK (CHAR_LENGTH(mAccount) BETWEEN 6 AND 30)
-```
-
+    CHECK (CHAR_LENGTH(mAccount) BETWEEN 6 AND 30)
 );
 
--- ==========================================
+-- ===========================
 -- Category
--- ==========================================
+-- ===========================
 
 CREATE TABLE Category (
-cID INT PRIMARY KEY,
-cName VARCHAR(50) NOT NULL,
-cDescription VARCHAR(255),
+    cID INT PRIMARY KEY,
+    cName VARCHAR(50) NOT NULL,
+    cDescription VARCHAR(255),
 
-```
-UNIQUE (cName),
-
-CHECK (CHAR_LENGTH(cName) BETWEEN 1 AND 50)
-```
-
+    UNIQUE(cName)
 );
 
--- ==========================================
+-- ===========================
 -- Product
--- ==========================================
+-- ===========================
 
 CREATE TABLE Product (
-pID INT PRIMARY KEY,
-sellerID INT NOT NULL,
-cID INT NOT NULL,
+    pID INT PRIMARY KEY,
 
-```
-pName VARCHAR(100) NOT NULL,
-description TEXT,
+    sellerID INT NOT NULL,
+    cID INT NOT NULL,
 
-price DECIMAL(10,2) NOT NULL,
+    pName VARCHAR(100) NOT NULL,
+    description TEXT,
 
-pCondition ENUM(
-    '幾乎全新',
-    '九成新',
-    '七成新',
-    '使用痕跡明顯'
-) NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
 
-pStatus ENUM(
-    '上架中',
-    '已售出',
-    '已下架'
-) NOT NULL,
+    pCondition ENUM(
+        '幾乎全新',
+        '九成新',
+        '七成新',
+        '使用痕跡明顯'
+    ) NOT NULL,
 
-postDate DATE NOT NULL,
+    pStatus ENUM(
+        '上架中',
+        '已售出',
+        '已下架'
+    ) NOT NULL,
 
-FOREIGN KEY (sellerID)
-REFERENCES Member(mID),
+    postDate DATE NOT NULL,
 
-FOREIGN KEY (cID)
-REFERENCES Category(cID),
+    FOREIGN KEY (sellerID)
+    REFERENCES Member(mID),
 
-CHECK (price > 0)
-```
+    FOREIGN KEY (cID)
+    REFERENCES Category(cID),
 
+    CHECK (price > 0)
 );
 
--- ==========================================
+-- ===========================
 -- PaymentMethod
--- ==========================================
+-- ===========================
 
 CREATE TABLE PaymentMethod (
-pmID INT PRIMARY KEY,
+    pmID INT PRIMARY KEY,
 
-```
-methodName ENUM(
-    '信用卡',
-    '銀行轉帳',
-    '電子支付',
-    '貨到付款'
-) NOT NULL,
+    methodName ENUM(
+        '信用卡',
+        '銀行轉帳',
+        '電子支付',
+        '貨到付款'
+    ) NOT NULL,
 
-UNIQUE(methodName)
-```
-
+    UNIQUE(methodName)
 );
 
--- ==========================================
+-- ===========================
 -- ShipmentMethod
--- ==========================================
+-- ===========================
 
 CREATE TABLE ShipmentMethod (
-smID INT PRIMARY KEY,
+    smID INT PRIMARY KEY,
 
-```
-methodName ENUM(
-    '超商取貨',
-    '宅配',
-    '面交'
-) NOT NULL,
+    methodName ENUM(
+        '超商取貨',
+        '宅配',
+        '面交'
+    ) NOT NULL,
 
-UNIQUE(methodName)
-```
-
+    UNIQUE(methodName)
 );
 
--- ==========================================
+-- ===========================
 -- Order
--- ==========================================
+-- ===========================
 
 CREATE TABLE `Order` (
-oID INT PRIMARY KEY,
+    oID INT PRIMARY KEY,
 
-```
-buyerID INT NOT NULL,
+    buyerID INT NOT NULL,
 
-oDate DATE NOT NULL,
+    oDate DATE NOT NULL,
 
-oStatus ENUM(
-    '待付款',
-    '已付款',
-    '已出貨',
-    '已完成',
-    '已取消'
-) NOT NULL,
+    oStatus ENUM(
+        '待付款',
+        '已付款',
+        '已出貨',
+        '已完成',
+        '已取消'
+    ) NOT NULL,
 
-totalAmount DECIMAL(10,2) NOT NULL,
+    totalAmount DECIMAL(10,2) NOT NULL,
 
-FOREIGN KEY (buyerID)
-REFERENCES Member(mID),
-
-CHECK (totalAmount >= 0)
-```
-
+    FOREIGN KEY (buyerID)
+    REFERENCES Member(mID)
 );
 
--- ==========================================
+-- ===========================
 -- OrderDetail
--- ==========================================
+-- ===========================
 
 CREATE TABLE OrderDetail (
-odID INT PRIMARY KEY,
+    odID INT PRIMARY KEY,
 
-```
-oID INT NOT NULL,
-pID INT NOT NULL,
+    oID INT NOT NULL,
 
-quantity INT NOT NULL,
-dealPrice DECIMAL(10,2) NOT NULL,
+    pID INT NOT NULL,
 
-FOREIGN KEY (oID)
-REFERENCES `Order`(oID),
+    quantity INT NOT NULL,
 
-FOREIGN KEY (pID)
-REFERENCES Product(pID),
+    dealPrice DECIMAL(10,2) NOT NULL,
 
-UNIQUE(pID),
+    FOREIGN KEY (oID)
+    REFERENCES `Order`(oID),
 
-CHECK (quantity > 0),
-CHECK (dealPrice > 0)
-```
+    FOREIGN KEY (pID)
+    REFERENCES Product(pID),
 
+    UNIQUE(pID),
+
+    CHECK (quantity > 0),
+    CHECK (dealPrice > 0)
 );
 
--- ==========================================
+-- ===========================
 -- Invoice
--- ==========================================
+-- ===========================
 
 CREATE TABLE Invoice (
-iID INT PRIMARY KEY,
+    iID INT PRIMARY KEY,
 
-```
-oID INT NOT NULL,
-pmID INT NOT NULL,
+    oID INT NOT NULL,
 
-iDate DATE,
+    pmID INT NOT NULL,
 
-amount DECIMAL(10,2) NOT NULL,
+    iDate DATE,
 
-paymentStatus ENUM(
-    '未付款',
-    '已付款',
-    '已退款'
-) NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
 
-FOREIGN KEY (oID)
-REFERENCES `Order`(oID),
+    paymentStatus ENUM(
+        '未付款',
+        '已付款',
+        '已退款'
+    ) NOT NULL,
 
-FOREIGN KEY (pmID)
-REFERENCES PaymentMethod(pmID)
-```
+    FOREIGN KEY (oID)
+    REFERENCES `Order`(oID),
 
+    FOREIGN KEY (pmID)
+    REFERENCES PaymentMethod(pmID)
 );
 
--- ==========================================
+-- ===========================
 -- Shipment
--- ==========================================
+-- ===========================
 
 CREATE TABLE Shipment (
-sID INT PRIMARY KEY,
+    sID INT PRIMARY KEY,
 
-```
-oID INT NOT NULL,
-smID INT NOT NULL,
+    oID INT NOT NULL,
 
-sDate DATE,
+    smID INT NOT NULL,
 
-sStatus ENUM(
-    '待出貨',
-    '配送中',
-    '已送達',
-    '已取消'
-) NOT NULL,
+    sDate DATE,
 
-FOREIGN KEY (oID)
-REFERENCES `Order`(oID),
+    sStatus ENUM(
+        '待出貨',
+        '配送中',
+        '已送達',
+        '已取消'
+    ) NOT NULL,
 
-FOREIGN KEY (smID)
-REFERENCES ShipmentMethod(smID)
-```
+    FOREIGN KEY (oID)
+    REFERENCES `Order`(oID),
 
+    FOREIGN KEY (smID)
+    REFERENCES ShipmentMethod(smID)
 );
 
--- ==========================================
+-- ===========================
 -- Review
--- ==========================================
+-- ===========================
 
 CREATE TABLE Review (
-rID INT PRIMARY KEY,
+    rID INT PRIMARY KEY,
 
-```
-oID INT NOT NULL,
-mID INT NOT NULL,
+    oID INT NOT NULL,
 
-score INT NOT NULL,
+    mID INT NOT NULL,
 
-comment VARCHAR(500),
+    score INT NOT NULL,
 
-rDate DATE NOT NULL,
+    comment VARCHAR(500),
 
-FOREIGN KEY (oID)
-REFERENCES `Order`(oID),
+    rDate DATE NOT NULL,
 
-FOREIGN KEY (mID)
-REFERENCES Member(mID),
+    FOREIGN KEY (oID)
+    REFERENCES `Order`(oID),
 
-CHECK (score BETWEEN 1 AND 5),
+    FOREIGN KEY (mID)
+    REFERENCES Member(mID),
 
-UNIQUE(oID)
-```
+    CHECK (score BETWEEN 1 AND 5),
 
+    UNIQUE(oID)
 );
