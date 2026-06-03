@@ -1,464 +1,125 @@
--- 二手物品交易平台 data.sql
--- 依照 PPT / ERD：Member、Product、Category、Order、OrderDetail、Invoice、PaymentMethod、Shipment、ShipmentMethod、Review
--- 若你的 schema 將 `Order` 命名為 `Orders`，請把本檔所有 `Order` 改成 `Orders`。
--- 若外鍵欄位名稱不同，請依 create table 的欄位名稱調整。
+USE secondhand_platform;
 
 SET NAMES utf8mb4;
 
--- PaymentMethod
-INSERT INTO
-    `PaymentMethod` (`pmID`, `methodName`)
+--Member--
+INSERT INTO Member
+(mID, mAccount, mName, mEmail, mPhone, mRole, mCreateDate)
 VALUES
-    (1, '信用卡'),
-    (2, '銀行轉帳'),
-    (3, '電子支付'),
-    (4, '貨到付款');
+(1001, 'seller_chen', '陳小美', 'seller.chen@example.com', '0912345678', '賣家', '2026-03-01'),
+(1002, 'seller_wang', '王書豪', 'seller.wang@example.com', '0922333444', '賣家', '2026-03-02'),
+(1003, 'seller_lin88', '林家豪', 'seller.lin88@example.com', '0933456789', '賣家', '2026-03-03'),
+(2001, 'buyer_ming01', '李小明', 'buyer.ming01@example.com', '0944567890', '買家', '2026-03-05'),
+(2002, 'buyer_anna02', '張小安', 'buyer.anna02@example.com', '0955678901', '買家', '2026-03-06'),
+(2003, 'buyer_jun03', '黃小均', 'buyer.jun03@example.com', '0966789012', '買家', '2026-03-08');
 
--- (5, '現金') CONSTRAINT failed (methodName 只能是：信用卡、銀行轉帳、電子支付、貨到付款)
--- (1, '信用卡') CONSTRAINT failed (pmID 不可重複)
-
--- ShipmentMethod
-INSERT INTO
-    `ShipmentMethod` (`smID`, `methodName`)
+--Category--
+INSERT INTO Category
+(cID, cName, cDescription)
 VALUES
-    (1, '超商取貨'),
-    (2, '宅配'),
-    (3, '面交');
+(1, '手機平板', '手機、平板與相關配件'),
+(2, '電腦周邊', '鍵盤、滑鼠、螢幕與其他電腦周邊設備'),
+(3, '書籍教材', '教科書、參考書、小說與講義'),
+(4, '居家用品', '家具、收納用品與生活用品');
 
--- (4, '郵局掛號') CONSTRAINT failed (methodName 只能是：超商取貨、宅配、面交)
--- (1, '超商取貨') CONSTRAINT failed (smID 不可重複)
-
--- Category
-INSERT INTO
-    `Category` (`cID`, `cName`, `cDescription`)
+--PaymentMethod--
+INSERT INTO PaymentMethod
+(pmID, methodName)
 VALUES
-    (1, '手機平板', '手機、平板與相關配件'),
-    (2, '電腦周邊', '筆電、鍵盤、滑鼠、螢幕與其他周邊設備'),
-    (3, '書籍教材', '教科書、參考書、小說與講義'),
-    (4, '服飾配件', '衣服、鞋子、包包與配件'),
-    (5, '居家用品', '家具、收納、生活用品'),
-    (6, '運動用品', '球鞋、運動裝備與健身用品'),
-    (7, '家電', '小家電、影音設備與生活電器'),
-    (8, '文具雜貨', '文具、雜貨與日常小物');
+(1, '信用卡'),
+(2, '銀行轉帳'),
+(3, '電子支付'),
+(4, '貨到付款');
 
--- (9, '', '分類名稱不可空白') CONSTRAINT failed (cName 長度 1～50 字元)
--- (10, '手機平板', '分類名稱不可重複') CONSTRAINT failed (cName UNIQUE)
-
--- Member
-INSERT INTO
-    `Member` (
-        `mID`,
-        `mAccount`,
-        `mName`,
-        `mEmail`,
-        `mPhone`,
-        `mRole`,
-        `mCreateDate`
-    )
+--ShipmentMethod--
+INSERT INTO ShipmentMethod
+(smID, methodName)
 VALUES
-    (
-        1001,
-        'buyer_may01',
-        '林小美',
-        'buyer.may01@example.com',
-        '0912345678',
-        '買家',
-        '2026-03-01'
-    ),
-    (
-        1002,
-        'seller_azhe',
-        '陳阿哲',
-        'seller.azhe@example.com',
-        '0922333444',
-        '賣家',
-        '2026-03-02'
-    ),
-    (
-        1003,
-        'buyer_anan',
-        '張小安',
-        'buyer.anan@example.com',
-        '0933456789',
-        '買家',
-        '2026-03-05'
-    ),
-    (
-        1004,
-        'seller_books',
-        '王書豪',
-        'seller.books@example.com',
-        '0944567890',
-        '賣家',
-        '2026-03-06'
-    ),
-    (
-        1005,
-        'seller_mom88',
-        '李惠雯',
-        'seller.mom88@example.com',
-        '0955678901',
-        '賣家',
-        '2026-03-08'
-    ),
-    (
-        1006,
-        'buyer_jun66',
-        '黃小均',
-        'buyer.jun66@example.com',
-        '0966789012',
-        '買家',
-        '2026-03-10'
-    ),
-    (
-        1007,
-        'seller_kai07',
-        '許阿凱',
-        'seller.kai07@example.com',
-        '0977890123',
-        '賣家',
-        '2026-03-11'
-    ),
-    (
-        1008,
-        'seller_home3c',
-        '鄭家豪',
-        'seller.home3c@example.com',
-        '0988901234',
-        '賣家',
-        '2026-03-15'
-    ),
-    (
-        1009,
-        'seller_fish09',
-        '吳小魚',
-        'seller.fish09@example.com',
-        '0911222333',
-        '賣家',
-        '2026-03-18'
-    ),
-    (
-        1010,
-        'buyer_lin10',
-        '林志明',
-        'buyer.lin10@example.com',
-        '0922444555',
-        '買家',
-        '2026-03-20'
-    );
+(1, '超商取貨'),
+(2, '宅配'),
+(3, '面交');
 
--- (1011, 'abc', '測試', 'test@example.com', '0911111111', '買家', '2026-03-22') CONSTRAINT failed (mAccount 長度需為 6～30 字元)
--- (1012, 'buyer_test', '測試', 'buyer.may01@example.com', '0911111111', '買家', '2026-03-22') CONSTRAINT failed (mEmail 不可重複)
--- (1013, 'buyer_test2', '測試', 'test2@example.com', '0911111111', '管理員', '2026-03-22') CONSTRAINT failed (mRole 只能是：買家、賣家)
-
--- Product
--- mID 為刊登商品的賣家；cID 為商品分類。
-INSERT INTO
-    `Product` (
-        `pID`,
-        `mID`,
-        `cID`,
-        `pName`,
-        `description`,
-        `price`,
-        `pCondition`,
-        `pStatus`,
-        `postDate`
-    )
+--Product--
+INSERT INTO Product
+(pID, sellerID, cID, pName, description, price, pCondition, pStatus, postDate)
 VALUES
-    (
-        1,
-        1002,
-        1,
-        'iPhone 14 128GB 藍色',
-        '功能正常，電池健康度 88%，附保護殼與充電線。',
-        16000,
-        '九成新',
-        '已售出',
-        '2026-04-10'
-    ),
-    (
-        2,
-        1002,
-        1,
-        'AirPods Pro 2',
-        '盒裝完整，耳塞已更換，少用保存良好。',
-        4200,
-        '幾乎全新',
-        '已售出',
-        '2026-04-12'
-    ),
-    (
-        3,
-        1004,
-        3,
-        '資料庫系統概論課本',
-        '有少量畫線，適合資料庫課程使用。',
-        450,
-        '七成新',
-        '上架中',
-        '2026-04-13'
-    ),
-    (
-        4,
-        1002,
-        2,
-        'Canon G7X 相機',
-        '外觀九成新，含記憶卡與相機包。',
-        12500,
-        '九成新',
-        '上架中',
-        '2026-04-15'
-    ),
-    (
-        5,
-        1007,
-        6,
-        'Nike Air Force 1 白鞋',
-        '尺寸 26.5，鞋底有使用痕跡。',
-        1500,
-        '使用痕跡明顯',
-        '已售出',
-        '2026-04-16'
-    ),
-    (
-        6,
-        1005,
-        5,
-        '北歐風小茶几',
-        '桌面有輕微刮痕，結構穩固。',
-        800,
-        '七成新',
-        '已售出',
-        '2026-04-18'
-    ),
-    (
-        7,
-        1008,
-        7,
-        '迷你烤箱',
-        '可正常加熱，因搬家暫時下架。',
-        1200,
-        '九成新',
-        '已下架',
-        '2026-04-19'
-    ),
-    (
-        8,
-        1002,
-        2,
-        'Nintendo Switch 主機',
-        '附 Joy-Con、底座與收納包。',
-        6500,
-        '九成新',
-        '已售出',
-        '2026-04-21'
-    ),
-    (
-        9,
-        1009,
-        8,
-        'Casio 工程計算機',
-        '上課使用一學期，功能正常。',
-        550,
-        '幾乎全新',
-        '上架中',
-        '2026-04-22'
-    ),
-    (
-        10,
-        1005,
-        4,
-        '20 吋行李箱',
-        '輪子正常，外殼有擦痕。',
-        1000,
-        '使用痕跡明顯',
-        '已售出',
-        '2026-04-24'
-    ),
-    (
-        11,
-        1008,
-        2,
-        '機械鍵盤 茶軸',
-        'RGB 燈效正常，附拔鍵器。',
-        2200,
-        '幾乎全新',
-        '已售出',
-        '2026-04-25'
-    ),
-    (
-        12,
-        1004,
-        3,
-        '英文小說套書',
-        '共 5 本，書況普通，可練英文閱讀。',
-        300,
-        '七成新',
-        '上架中',
-        '2026-04-26'
-    ),
-    (
-        13,
-        1005,
-        4,
-        '無印良品後背包',
-        '容量大，拉鍊正常，外觀乾淨。',
-        700,
-        '九成新',
-        '已售出',
-        '2026-04-27'
-    ),
-    (
-        14,
-        1007,
-        6,
-        '自行車安全帽',
-        '全新未使用，尺寸 M。',
-        500,
-        '全新',
-        '上架中',
-        '2026-04-28'
-    ),
-    (
-        15,
-        1008,
-        7,
-        '藍牙喇叭',
-        '可正常連線，音量與續航正常。',
-        900,
-        '七成新',
-        '已售出',
-        '2026-04-29'
-    ),
-    (
-        16,
-        1008,
-        7,
-        '桌上型電風扇',
-        '風量正常，外觀有使用痕跡。',
-        600,
-        '使用痕跡明顯',
-        '上架中',
-        '2026-05-01'
-    );
+(1, 1001, 1, '二手 iPhone 14 128GB',
+ '功能正常，電池健康度 88%，附保護殼與充電線。',
+ 15000.00, '九成新', '已售出', '2026-04-10'),
 
--- (17, 1002, 1, '', '名稱不可空白', 100, '九成新', '上架中', '2026-05-01') CONSTRAINT failed (pName 長度 1～100 字元)
--- (18, 1002, 1, '測試商品', '價格需大於 0', 0, '九成新', '上架中', '2026-05-01') CONSTRAINT failed (price > 0)
--- (19, 1002, 1, '測試商品', '狀況不在允許範圍', 100, '普通', '上架中', '2026-05-01') CONSTRAINT failed (pCondition)
--- (20, 1002, 1, '測試商品', '狀態不在允許範圍', 100, '九成新', '預購中', '2026-05-01') CONSTRAINT failed (pStatus)
+(2, 1001, 1, 'AirPods Pro 2',
+ '盒裝完整，少量使用，耳機功能正常。',
+ 4200.00, '幾乎全新', '上架中', '2026-04-12'),
 
--- Order
--- mID 為下單買家。
-INSERT INTO
-    `Order` (`oID`, `mID`, `oDate`, `oStatus`, `totalAmount`)
+(3, 1002, 3, '資料庫系統概論課本',
+ '內頁有少量畫線，不影響閱讀。',
+ 450.00, '七成新', '已售出', '2026-04-15'),
+
+(4, 1003, 4, '北歐風小茶几',
+ '桌面有使用痕跡，但結構穩固。',
+ 800.00, '使用痕跡明顯', '已下架', '2026-04-18'),
+
+(5, 1003, 2, '機械鍵盤 茶軸',
+ 'RGB 燈效正常，附拔鍵器與原盒。',
+ 1600.00, '幾乎全新', '已售出', '2026-04-20'),
+
+(6, 1002, 3, '演算法參考書',
+ '書況良好，僅封面有些微折痕。',
+ 350.00, '九成新', '上架中', '2026-04-21');
+
+--Order--
+INSERT INTO `Order`
+(oID, buyerID, oDate, oStatus, totalAmount)
 VALUES
-    (1, 1001, '2026-04-20', '已完成', 20200),
-    (2, 1003, '2026-04-25', '已完成', 1500),
-    (3, 1006, '2026-04-28', '已出貨', 800),
-    (4, 1010, '2026-05-02', '已完成', 6500),
-    (5, 1001, '2026-05-05', '已付款', 2200),
-    (6, 1003, '2026-05-08', '待付款', 700),
-    (7, 1010, '2026-05-10', '已取消', 500),
-    (8, 1006, '2026-05-12', '已完成', 1900);
+(3001, 2001, '2026-04-20', '已完成', 15000.00),
+(3002, 2002, '2026-04-23', '已完成', 450.00),
+(3003, 2003, '2026-04-25', '已付款', 1600.00);
 
--- (9, 1001, '2026-05-13', '處理中', 1000) CONSTRAINT failed (oStatus)
--- (10, 1001, '2026-05-13', '待付款', -1) CONSTRAINT failed (totalAmount >= 0)
-
--- Shipment
--- smID 為物流方式；每筆 OrderDetail 會指向一筆 Shipment。
-INSERT INTO
-    `Shipment` (`sID`, `smID`, `sDate`, `sStatus`)
+--OrderDetail--
+INSERT INTO OrderDetail
+(odID, oID, pID, quantity, dealPrice)
 VALUES
-    (1, 1, '2026-04-22', '已送達'),
-    (2, 2, '2026-04-27', '已送達'),
-    (3, 1, '2026-04-30', '配送中'),
-    (4, 3, '2026-05-02', '已送達'),
-    (5, 2, NULL, '待出貨'),
-    (6, 1, NULL, '待出貨'),
-    (7, 3, NULL, '已取消'),
-    (8, 1, '2026-05-14', '已送達'),
-    (9, 2, '2026-05-14', '已送達');
+(4001, 3001, 1, 1, 15000.00),
+(4002, 3002, 3, 1, 450.00),
+(4003, 3003, 5, 1, 1600.00);
 
--- (10, 1, '2026-05-01', '準備中') CONSTRAINT failed (sStatus)
--- (11, 4, '2026-05-01', '已寄出') CONSTRAINT failed (smID 需參照 ShipmentMethod)
-
--- OrderDetail
--- 一筆訂單至少需有一筆明細；每筆明細對應一項商品與一筆出貨資料。
-INSERT INTO
-    `OrderDetail` (`odID`, `oID`, `pID`, `sID`, `quantity`, `dealPrice`)
+--Invoice--
+INSERT INTO Invoice
+(iID, oID, pmID, iDate, amount, paymentStatus)
 VALUES
-    (1, 1, 1, 1, 1, 16000),
-    (2, 1, 2, 1, 1, 4200),
-    (3, 2, 5, 2, 1, 1500),
-    (4, 3, 6, 3, 1, 800),
-    (5, 4, 8, 4, 1, 6500),
-    (6, 5, 11, 5, 1, 2200),
-    (7, 6, 13, 6, 1, 700),
-    (8, 7, 14, 7, 1, 500),
-    (9, 8, 10, 8, 1, 1000),
-    (10, 8, 15, 9, 1, 900);
+(5001, 3001, 3, '2026-04-20', 15000.00, '已付款'),
+(5002, 3002, 2, '2026-04-23', 450.00, '已付款'),
+(5003, 3003, 1, '2026-04-25', 1600.00, '已付款');
 
--- (11, 1, 1, 1, 0, 16000) CONSTRAINT failed (quantity > 0)
--- (12, 1, 1, 1, 1, 0) CONSTRAINT failed (dealPrice > 0)
--- (13, 1, 999, 1, 1, 100) CONSTRAINT failed (pID 需參照 Product)
-
--- Invoice
--- oID 為對應訂單；pmID 為付款方式。
-INSERT INTO
-    `Invoice` (`iID`, `oID`, `pmID`, `iDate`, `amount`, `paymentStatus`)
+--Shipment--
+INSERT INTO Shipment
+(sID, oID, smID, sDate, sStatus)
 VALUES
-    (1, 1, 3, '2026-04-20', 20200, '已付款'),
-    (2, 2, 2, '2026-04-25', 1500, '已付款'),
-    (3, 3, 1, '2026-04-28', 800, '已付款'),
-    (4, 4, 3, '2026-05-02', 6500, '已付款'),
-    (5, 5, 1, '2026-05-05', 2200, '已付款'),
-    (6, 6, 2, NULL, 700, '未付款'),
-    (7, 7, 1, NULL, 500, '付款失敗'),
-    (8, 8, 3, '2026-05-12', 1900, '已付款');
+(6001, 3001, 1, '2026-04-21', '已送達'),
+(6002, 3002, 2, '2026-04-24', '已送達'),
+(6003, 3003, 1, NULL, '待出貨');
 
--- (9, 1, 1, '2026-04-20', 0, '已付款') CONSTRAINT failed (amount > 0)
--- (10, 1, 1, '2026-04-20', 20200, '處理中') CONSTRAINT failed (paymentStatus)
--- (11, 999, 1, '2026-04-20', 100, '已付款') CONSTRAINT failed (oID 需參照 Order)
-
--- Review
--- mID 為撰寫評價的買家；oID 為被評價的訂單。每筆已完成訂單最多一筆評價。
-INSERT INTO
-    `Review` (`rID`, `mID`, `oID`, `score`, `comment`, `rDate`)
+--Review--
+INSERT INTO Review
+(rID, oID, mID, score, comment, rDate)
 VALUES
-    (
-        1,
-        1001,
-        1,
-        5,
-        '商品保存良好，賣家回覆快速，出貨也很準時。',
-        '2026-04-25'
-    ),
-    (
-        2,
-        1003,
-        2,
-        4,
-        '鞋子狀況和描述差不多，包裝完整。',
-        '2026-04-30'
-    ),
-    (
-        3,
-        1010,
-        4,
-        5,
-        '主機功能正常，面交過程很順利。',
-        '2026-05-03'
-    ),
-    (
-        4,
-        1006,
-        8,
-        4,
-        '商品可正常使用，物流速度也可以。',
-        '2026-05-16'
-    );
+(7001, 3001, 2001, 5,
+ '商品狀況符合描述，包裝完整，交易過程順利。',
+ '2026-04-23'),
 
--- (5, 1001, 1, 6, '評分超出範圍', '2026-04-25') CONSTRAINT failed (score 需介於 1 到 5)
--- (6, 1001, 1, 5, '同一訂單不可重複評論', '2026-04-26') CONSTRAINT failed (oID UNIQUE)
--- (7, 9999, 1, 5, '會員不存在', '2026-04-26') CONSTRAINT failed (mID 需參照 Member)
+(7002, 3002, 2002, 4,
+ '書況和描述相符，價格合理。',
+ '2026-04-26');
+
+
+SELECT * FROM Member;
+SELECT * FROM Category;
+SELECT * FROM Product;
+SELECT * FROM PaymentMethod;
+SELECT * FROM ShipmentMethod;
+SELECT * FROM `Order`;
+SELECT * FROM OrderDetail;
+SELECT * FROM Invoice;
+SELECT * FROM Shipment;
+SELECT * FROM Review;
+```
