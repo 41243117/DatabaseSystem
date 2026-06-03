@@ -21,13 +21,13 @@ CREATE TABLE Member (
         CHECK (CHAR_LENGTH(mAccount) BETWEEN 6 AND 30),
 
     CONSTRAINT chk_member_account_format
-        CHECK (mAccount REGEXP '^[A-Za-z0-9_]+$'),
+        CHECK (mAccount REGEXP '^[A-Za-z0-9_]+$'),     --只允許英文、數字、底線--
 
     CONSTRAINT chk_member_email_format
-        CHECK (mEmail REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$'),
+        CHECK (mEmail REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$'),    --符合email格式--
 
     CONSTRAINT chk_member_phone_format
-        CHECK (mPhone REGEXP '^09[0-9]{8}$')
+        CHECK (mPhone REGEXP '^09[0-9]{8}$')    --符合台灣電話號碼格式--
 );
 
 --Category--
