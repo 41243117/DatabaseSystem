@@ -125,7 +125,7 @@ CREATE TABLE Product (
         '故障品'
     ) NOT NULL,
 
-    pName VARCHAR(100) NOT NULL,
+    ptName VARCHAR(100) NOT NULL,
 
     pStatus ENUM(
         '上架中',
