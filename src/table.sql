@@ -97,7 +97,7 @@ CREATE TABLE Product (
 
     description VARCHAR(500),
     postDate DATE NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
+    price DECIMAL(10,0) NOT NULL,
 
     CONSTRAINT fk_product_member
         FOREIGN KEY (mID) REFERENCES Member(mID),
@@ -131,7 +131,7 @@ CREATE TABLE `Order` (
     ) NOT NULL,
 
     oDate DATE NOT NULL,
-    totalAmount DECIMAL(10,2) NOT NULL,
+    totalAmount DECIMAL(10,0) NOT NULL,
 
     CONSTRAINT fk_order_member
         FOREIGN KEY (mID) REFERENCES Member(mID),
@@ -171,7 +171,7 @@ CREATE TABLE OrderDetail (
     sID INT NOT NULL,
 
     quantity INT NOT NULL DEFAULT 1,
-    dealPrice DECIMAL(10,2) NOT NULL,
+    dealPrice DECIMAL(10,0) NOT NULL,
 
     CONSTRAINT fk_orderdetail_order
         FOREIGN KEY (oID) REFERENCES `Order`(oID),
@@ -197,7 +197,7 @@ CREATE TABLE Invoice (
     pmID INT NOT NULL,
 
     iDate DATE,
-    amount DECIMAL(10,2) NOT NULL,
+    amount DECIMAL(10,0) NOT NULL,
 
     paymentStatus ENUM(
         '未付款',
