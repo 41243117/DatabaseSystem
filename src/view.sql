@@ -1,20 +1,44 @@
 USE SecHand;
 
 -- ============================================
--- 若重跑，先刪除 View
+-- 外部檢視 External View
+-- 二手物品交易平台
 -- ============================================
 
+-- 若重跑，先刪除 View
 DROP VIEW IF EXISTS Buyer_View;
 DROP VIEW IF EXISTS Seller_View;
 DROP VIEW IF EXISTS Admin_View;
+DROP VIEW IF EXISTS Product_Status_View;
 
 -- ============================================
--- 1. Buyer_View
--- 買家檢視
--- 用途：買家查看自己的訂單、購買商品、付款狀態、出貨狀態與評價
+-- 1. 建立買家、賣家與管理者帳號
 -- ============================================
 
-CREATE VIEW Buyer_View AS
+-- 建立買家帳號
+CREATE USER IF NOT EXISTS 'buyer_user'@'localhost'
+IDENTIFIED BY 'test_buyer_0000';
+
+-- 建立賣家帳號
+CREATE USER IF NOT EXISTS 'seller_user'@'localhost'
+IDENTIFIED BY 'test_seller_0000';
+
+-- 建立管理者帳號
+CREATE USER IF NOT EXISTS 'admin_user'@'localhost'
+IDENTIFIED BY 'test_admin_0000';
+
+-- ============================================
+-- 2. 建立 External View
+-- ============================================
+
+-- ============================================
+-- 2.1 買家 View
+-- 用途：
+-- 買家可查看自己的訂單、購買商品、付款狀態、出貨狀態與評價資料。
+-- 此 View 不顯示賣家 Email、電話等完整個資。
+-- ============================================
+
+CREATE OR REPLACE VIEW Buyer_View AS
 SELECT
     buyer.mID AS buyerID,
     buyer.mName AS buyerName,
@@ -29,7 +53,6 @@ SELECT
     p.pCondition AS productCondition,
     p.price AS productPrice,
 
-    seller.mID AS sellerID,
     seller.mName AS sellerName,
 
     c.cName AS categoryName,
@@ -76,13 +99,16 @@ LEFT JOIN ShipmentMethod sm
 LEFT JOIN Review r
     ON o.oID = r.oID;
 
+
 -- ============================================
--- 2. Seller_View
--- 賣家檢視
--- 用途：賣家查看自己刊登商品、商品銷售狀態、買家、付款、出貨與評價
+-- 2.2 賣家 View
+-- 用途：
+-- 賣家可查看自己刊登的商品、商品銷售狀態、買家、付款狀態、
+-- 出貨狀態與評價資料。
+-- 此 View 主要提供賣家管理商品與安排出貨使用。
 -- ============================================
 
-CREATE VIEW Seller_View AS
+CREATE OR REPLACE VIEW Seller_View AS
 SELECT
     seller.mID AS sellerID,
     seller.mName AS sellerName,
@@ -101,7 +127,6 @@ SELECT
     o.oStatus AS orderStatus,
     o.totalAmount AS orderAmount,
 
-    buyer.mID AS buyerID,
     buyer.mName AS buyerName,
 
     od.quantity AS quantity,
@@ -149,13 +174,16 @@ LEFT JOIN ShipmentMethod sm
 LEFT JOIN Review r
     ON o.oID = r.oID;
 
+
 -- ============================================
--- 3. Admin_View
--- 管理者檢視
--- 用途：管理者查看平台整體交易資料，包含買家、賣家、商品、訂單、付款、出貨與評價
+-- 2.3 管理者 View
+-- 用途：
+-- 管理者可查看平台整體交易資料，包含會員資料、商品資料、
+-- 訂單資料、付款狀態、出貨狀態與評價紀錄。
+-- 管理者 View 顯示資料較完整，方便後台管理。
 -- ============================================
 
-CREATE VIEW Admin_View AS
+CREATE OR REPLACE VIEW Admin_View AS
 SELECT
     o.oID AS orderID,
     o.oDate AS orderDate,
@@ -232,3 +260,161 @@ LEFT JOIN ShipmentMethod sm
 
 LEFT JOIN Review r
     ON o.oID = r.oID;
+
+
+-- ============================================
+-- 2.4 商品狀態 View
+-- 用途：
+-- 依照商品狀態顯示「可購買」或「不可購買」。
+-- 類似 Campus-Digital-Bookstore 用 Amount 判斷可借閱狀態。
+-- ============================================
+
+CREATE OR REPLACE VIEW Product_Status_View AS
+SELECT
+    p.pID AS productID,
+    p.pName AS productName,
+    p.pCondition AS productCondition,
+    p.price AS price,
+    p.pStatus AS productStatus,
+
+    CASE
+        WHEN p.pStatus = '上架中' THEN '可購買'
+        ELSE '不可購買'
+    END AS purchaseStatus,
+
+    c.cName AS categoryName,
+    seller.mName AS sellerName
+
+FROM Product p
+JOIN Category c
+    ON p.cID = c.cID
+
+JOIN Member seller
+    ON p.mID = seller.mID
+
+ORDER BY p.pName;
+
+
+-- ============================================
+-- 3. 權限設定
+-- ============================================
+
+-- 先移除可能存在的權限，避免重複設定時混亂
+REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'buyer_user'@'localhost';
+REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'seller_user'@'localhost';
+REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'admin_user'@'localhost';
+
+-- 買家只能查詢買家檢視與商品狀態檢視
+GRANT SELECT ON SecHand.Buyer_View
+TO 'buyer_user'@'localhost';
+
+GRANT SELECT ON SecHand.Product_Status_View
+TO 'buyer_user'@'localhost';
+
+-- 賣家只能查詢賣家檢視與商品狀態檢視
+GRANT SELECT ON SecHand.Seller_View
+TO 'seller_user'@'localhost';
+
+GRANT SELECT ON SecHand.Product_Status_View
+TO 'seller_user'@'localhost';
+
+-- 管理者可以查詢全部外部檢視
+GRANT SELECT ON SecHand.Buyer_View
+TO 'admin_user'@'localhost';
+
+GRANT SELECT ON SecHand.Seller_View
+TO 'admin_user'@'localhost';
+
+GRANT SELECT ON SecHand.Admin_View
+TO 'admin_user'@'localhost';
+
+GRANT SELECT ON SecHand.Product_Status_View
+TO 'admin_user'@'localhost';
+
+FLUSH PRIVILEGES;
+
+
+-- ============================================
+-- 4. 測試查詢
+-- ============================================
+
+SELECT * FROM Buyer_View;
+SELECT * FROM Seller_View;
+SELECT * FROM Admin_View;
+SELECT * FROM Product_Status_View;
+
+
+-- ============================================
+-- 5. GROUP BY 與 HAVING 查詢功能
+-- ============================================
+
+-- 5.1 查詢每位買家的訂單數量
+SELECT
+    buyer.mID AS buyerID,
+    buyer.mName AS buyerName,
+    COUNT(o.oID) AS orderCount
+FROM Member buyer
+LEFT JOIN `Order` o
+    ON buyer.mID = o.mID
+WHERE buyer.mRole IN ('買家', '買賣家')
+GROUP BY buyer.mID, buyer.mName
+ORDER BY orderCount DESC;
+
+
+-- 5.2 查詢訂單數量超過 1 筆的買家
+SELECT
+    buyer.mID AS buyerID,
+    buyer.mName AS buyerName,
+    COUNT(o.oID) AS orderCount
+FROM Member buyer
+JOIN `Order` o
+    ON buyer.mID = o.mID
+WHERE buyer.mRole IN ('買家', '買賣家')
+GROUP BY buyer.mID, buyer.mName
+HAVING COUNT(o.oID) > 1
+ORDER BY orderCount DESC;
+
+
+-- 5.3 查詢每位賣家刊登的商品數量
+SELECT
+    seller.mID AS sellerID,
+    seller.mName AS sellerName,
+    COUNT(p.pID) AS productCount
+FROM Member seller
+LEFT JOIN Product p
+    ON seller.mID = p.mID
+WHERE seller.mRole IN ('賣家', '買賣家')
+GROUP BY seller.mID, seller.mName
+ORDER BY productCount DESC;
+
+
+-- 5.4 查詢每個商品分類的商品數量
+SELECT
+    c.cID AS categoryID,
+    c.cName AS categoryName,
+    COUNT(p.pID) AS productCount
+FROM Category c
+LEFT JOIN Product p
+    ON c.cID = p.cID
+GROUP BY c.cID, c.cName
+ORDER BY productCount DESC;
+
+
+-- 5.5 查詢每位賣家的平均評分
+SELECT
+    seller.mID AS sellerID,
+    seller.mName AS sellerName,
+    AVG(r.score) AS averageScore,
+    COUNT(r.rID) AS reviewCount
+FROM Member seller
+JOIN Product p
+    ON seller.mID = p.mID
+JOIN OrderDetail od
+    ON p.pID = od.pID
+JOIN `Order` o
+    ON od.oID = o.oID
+JOIN Review r
+    ON o.oID = r.oID
+GROUP BY seller.mID, seller.mName
+HAVING COUNT(r.rID) > 0
+ORDER BY averageScore DESC;
