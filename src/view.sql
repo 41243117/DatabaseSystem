@@ -360,7 +360,6 @@ TO 'seller_user'@'localhost';
 GRANT INSERT ON SecHand.Shipment
 TO 'seller_user'@'localhost';
 
--- 新增評價
 GRANT INSERT ON SecHand.Review
 TO 'buyer_user'@'localhost';
 
