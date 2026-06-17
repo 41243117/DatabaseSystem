@@ -360,6 +360,10 @@ TO 'seller_user'@'localhost';
 GRANT INSERT ON SecHand.Shipment
 TO 'seller_user'@'localhost';
 
+-- 新增評價
+GRANT INSERT ON SecHand.Review
+TO 'buyer_user'@'localhost';
+
 -- 修改商品資料
 GRANT UPDATE (pCondition, pName, pStatus, description, price)
 ON SecHand.Product
@@ -370,11 +374,19 @@ GRANT UPDATE (sStatus, sDate)
 ON SecHand.Shipment
 TO 'seller_user'@'localhost';
 
+-- 修改評價內容
+GRANT UPDATE (score, comment)
+ON SecHand.Review
+TO 'seller_user'@'localhost';
+
 -- 刪除商品
 -- 若商品已被 OrderDetail 參照，會被外鍵限制擋下
 GRANT DELETE ON SecHand.Product
 TO 'seller_user'@'localhost';
 
+-- 刪除評價
+GRANT DELETE ON SecHand.Review
+TO 'seller_user'@'localhost';
 
 -- ============================================
 -- 管理者權限
