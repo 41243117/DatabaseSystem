@@ -304,6 +304,44 @@ REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'buyer_user'@'localhost';
 REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'seller_user'@'localhost';
 REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'admin_user'@'localhost';
 
+-- ============================================
+-- 買家權限
+-- 買家可新增訂單、訂單明細、付款資料與評價
+-- 可修改自己的聯絡資料、訂單狀態、付款狀態與評價內容
+-- 可刪除評價資料
+-- ============================================
+
+GRANT INSERT ON SecHand.`Order`
+TO 'buyer_user'@'localhost';
+
+GRANT INSERT ON SecHand.OrderDetail
+TO 'buyer_user'@'localhost';
+
+GRANT INSERT ON SecHand.Invoice
+TO 'buyer_user'@'localhost';
+
+GRANT INSERT ON SecHand.Review
+TO 'buyer_user'@'localhost';
+
+GRANT UPDATE (mEmail, mPhone)
+ON SecHand.Member
+TO 'buyer_user'@'localhost';
+
+GRANT UPDATE (oStatus)
+ON SecHand.`Order`
+TO 'buyer_user'@'localhost';
+
+GRANT UPDATE (paymentStatus)
+ON SecHand.Invoice
+TO 'buyer_user'@'localhost';
+
+GRANT UPDATE (score, comment)
+ON SecHand.Review
+TO 'buyer_user'@'localhost';
+
+GRANT DELETE ON SecHand.Review
+TO 'buyer_user'@'localhost';
+
 -- 買家只能查詢買家檢視與商品狀態檢視
 GRANT SELECT ON SecHand.Buyer_View
 TO 'buyer_user'@'localhost';
@@ -311,12 +349,47 @@ TO 'buyer_user'@'localhost';
 GRANT SELECT ON SecHand.Product_Status_View
 TO 'buyer_user'@'localhost';
 
+
+-- ============================================
+-- 賣家權限
+-- 賣家可新增商品與出貨資料
+-- 可修改商品資訊與出貨狀態
+-- 可刪除尚未被訂單參照的商品
+-- ============================================
+
+GRANT INSERT ON SecHand.Product
+TO 'seller_user'@'localhost';
+
+GRANT INSERT ON SecHand.Shipment
+TO 'seller_user'@'localhost';
+
+GRANT UPDATE (pCondition, pName, pStatus, description, price)
+ON SecHand.Product
+TO 'seller_user'@'localhost';
+
+GRANT UPDATE (sStatus, sDate)
+ON SecHand.Shipment
+TO 'seller_user'@'localhost';
+
+GRANT DELETE ON SecHand.Product
+TO 'seller_user'@'localhost';
+
 -- 賣家只能查詢賣家檢視與商品狀態檢視
 GRANT SELECT ON SecHand.Seller_View
 TO 'seller_user'@'localhost';
 
 GRANT SELECT ON SecHand.Product_Status_View
 TO 'seller_user'@'localhost';
+
+
+-- ============================================
+-- 管理者權限
+-- 管理者可查詢、新增、修改、刪除所有資料
+-- ============================================
+
+GRANT SELECT, INSERT, UPDATE, DELETE
+ON SecHand.*
+TO 'admin_user'@'localhost';
 
 -- 管理者可以查詢全部外部檢視
 GRANT SELECT ON SecHand.Buyer_View
@@ -331,7 +404,11 @@ TO 'admin_user'@'localhost';
 GRANT SELECT ON SecHand.Product_Status_View
 TO 'admin_user'@'localhost';
 
+
 FLUSH PRIVILEGES;
+
+
+
 
 
 -- ============================================
