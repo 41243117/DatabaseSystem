@@ -266,81 +266,145 @@ REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'buyer_user'@'localhost';
 REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'seller_user'@'localhost';
 REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'admin_user'@'localhost';
 
---============================================
--- 買家權限
+-- ============================================
+-- 買家 buyer_user 權限
 -- ============================================
 
 -- 查詢 View
-GRANT SELECT ON SecHand.Buyer_View
+GRANT SELECT
+ON SecHand.Buyer_View
 TO 'buyer_user'@'localhost';
 
--- 新增訂單相關資料
-GRANT INSERT ON SecHand.`Order`
+GRANT SELECT
+ON SecHand.Product_Status_View
 TO 'buyer_user'@'localhost';
 
-GRANT INSERT ON SecHand.OrderDetail
+-- 買家執行 DML 子查詢需要的 SELECT 權限
+GRANT SELECT (mID, mAccount, mName, mEmail, mPhone)
+ON SecHand.Member
 TO 'buyer_user'@'localhost';
 
-GRANT INSERT ON SecHand.Invoice
+GRANT SELECT (oID, mID, oDate, totalAmount, oStatus)
+ON SecHand.`Order`
 TO 'buyer_user'@'localhost';
 
-GRANT INSERT ON SecHand.Review
+GRANT SELECT (pmID, methodName)
+ON SecHand.PaymentMethod
 TO 'buyer_user'@'localhost';
 
--- 修改自己的基本聯絡資料
+GRANT SELECT (rID, mID, oID, reviewType, score, comment, rDate)
+ON SecHand.Review
+TO 'buyer_user'@'localhost';
+
+-- 買家可以新增訂單、付款紀錄、評價
+GRANT INSERT
+ON SecHand.`Order`
+TO 'buyer_user'@'localhost';
+
+GRANT INSERT
+ON SecHand.OrderDetail
+TO 'buyer_user'@'localhost';
+
+GRANT INSERT
+ON SecHand.Invoice
+TO 'buyer_user'@'localhost';
+
+GRANT INSERT
+ON SecHand.Review
+TO 'buyer_user'@'localhost';
+
+-- 買家可以修改自己的聯絡資料與評價內容
 GRANT UPDATE (mEmail, mPhone)
 ON SecHand.Member
 TO 'buyer_user'@'localhost';
 
--- 修改評價內容
 GRANT UPDATE (score, comment)
 ON SecHand.Review
 TO 'buyer_user'@'localhost';
 
--- 刪除評價
-GRANT DELETE ON SecHand.Review
+-- 買家可以刪除評價
+GRANT DELETE
+ON SecHand.Review
 TO 'buyer_user'@'localhost';
 
+
+
 -- ============================================
--- 賣家權限
+-- 賣家 seller_user 權限
 -- ============================================
 
 -- 查詢 View
-GRANT SELECT ON SecHand.Seller_View
+GRANT SELECT
+ON SecHand.Seller_View
 TO 'seller_user'@'localhost';
 
--- 新增商品與出貨資料
-GRANT INSERT ON SecHand.Product
+GRANT SELECT
+ON SecHand.Product_Status_View
 TO 'seller_user'@'localhost';
 
-GRANT INSERT ON SecHand.Shipment
+-- 賣家執行 DML 子查詢需要的 SELECT 權限
+GRANT SELECT (mID, mAccount, mName)
+ON SecHand.Member
 TO 'seller_user'@'localhost';
 
-GRANT INSERT ON SecHand.Review
-TO 'buyer_user'@'localhost';
+GRANT SELECT (cID, cName)
+ON SecHand.Category
+TO 'seller_user'@'localhost';
 
--- 修改商品資料
+GRANT SELECT (pID, mID, cID, pName, pStatus, price)
+ON SecHand.Product
+TO 'seller_user'@'localhost';
+
+GRANT SELECT (smID, methodName)
+ON SecHand.ShipmentMethod
+TO 'seller_user'@'localhost';
+
+GRANT SELECT (sID, smID, sStatus, sDate)
+ON SecHand.Shipment
+TO 'seller_user'@'localhost';
+
+GRANT SELECT (oID, mID, oDate, totalAmount, oStatus)
+ON SecHand.`Order`
+TO 'seller_user'@'localhost';
+
+GRANT SELECT (rID, mID, oID, reviewType, score, comment, rDate)
+ON SecHand.Review
+TO 'seller_user'@'localhost';
+
+-- 賣家可以新增商品、出貨資料、評價
+GRANT INSERT
+ON SecHand.Product
+TO 'seller_user'@'localhost';
+
+GRANT INSERT
+ON SecHand.Shipment
+TO 'seller_user'@'localhost';
+
+GRANT INSERT
+ON SecHand.Review
+TO 'seller_user'@'localhost';
+
+-- 賣家可以修改商品資料、出貨狀態、評價內容
 GRANT UPDATE (pCondition, pName, pStatus, description, price)
 ON SecHand.Product
 TO 'seller_user'@'localhost';
 
--- 修改出貨資料
 GRANT UPDATE (sStatus, sDate)
 ON SecHand.Shipment
 TO 'seller_user'@'localhost';
 
--- 修改評價內容
 GRANT UPDATE (score, comment)
 ON SecHand.Review
 TO 'seller_user'@'localhost';
 
--- 刪除商品
+-- 賣家可以刪除商品與評價
 -- 若商品已被 OrderDetail 參照，會被外鍵限制擋下
-GRANT DELETE ON SecHand.Product
+GRANT DELETE
+ON SecHand.Product
 TO 'seller_user'@'localhost';
 
--- 刪除評價
-GRANT DELETE ON SecHand.Review
+GRANT DELETE
+ON SecHand.Review
 TO 'seller_user'@'localhost';
 
 -- ============================================
