@@ -12,15 +12,15 @@ DROP VIEW IF EXISTS Product_Status_View;
 
 -- 建立買家帳號
 CREATE USER IF NOT EXISTS 'buyer_user'@'localhost'
-IDENTIFIED BY 'test_buyer_0000';
+IDENTIFIED BY '0000';
 
 -- 建立賣家帳號
 CREATE USER IF NOT EXISTS 'seller_user'@'localhost'
-IDENTIFIED BY 'test_seller_0000';
+IDENTIFIED BY '0000';
 
 -- 建立管理者帳號
 CREATE USER IF NOT EXISTS 'admin_user'@'localhost'
-IDENTIFIED BY 'test_admin_0000';
+IDENTIFIED BY '0000';
 
 -- ============================================
 -- 2. 建立 External View
