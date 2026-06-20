@@ -372,7 +372,6 @@ FLUSH PRIVILEGES;
 SELECT * FROM Buyer_View;
 SELECT * FROM Seller_View;
 SELECT * FROM Admin_View;
-SELECT * FROM Product_Status_View;
 
 
 -- ============================================
