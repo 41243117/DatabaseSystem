@@ -27,14 +27,6 @@ SELECT *
 FROM Buyer_View;
 
 
--- -------------------------
--- 1-2 買家可以查詢商品狀態
--- 預期結果：成功
--- -------------------------
-
-SELECT *
-FROM Product_Status_View;
-
 
 -- -------------------------
 -- 1-3 買家新增訂單
@@ -86,7 +78,7 @@ VALUES
 -- -------------------------
 
 INSERT INTO Review
-(mID, oID, reviewType, score, comment, rDate)
+(mID, oID, score, comment, rDate)
 VALUES
 (
     (SELECT mID FROM Member WHERE mAccount = 'buyer_ming01'),
@@ -99,7 +91,6 @@ VALUES
         ORDER BY oID DESC
         LIMIT 1
     ),
-    '買家評價',
     5,
     '測試買家評價：商品狀況良好。',
     '2026-06-10'
@@ -124,7 +115,6 @@ WHERE mAccount = 'buyer_ming01';
 UPDATE Review
 SET comment = '測試買家評價：修改後的評價內容。'
 WHERE mID = (SELECT mID FROM Member WHERE mAccount = 'buyer_ming01')
-  AND reviewType = '買家評價'
   AND comment = '測試買家評價：商品狀況良好。';
 
 
@@ -279,7 +269,7 @@ WHERE sID = (
 -- -------------------------
 
 INSERT INTO Review
-(mID, oID, reviewType, score, comment, rDate)
+(mID, oID, score, comment, rDate)
 VALUES
 (
     (SELECT mID FROM Member WHERE mAccount = 'seller_wang'),
@@ -289,7 +279,6 @@ VALUES
         ORDER BY oID DESC
         LIMIT 1
     ),
-    '賣家評價',
     5,
     '測試賣家評價：買家付款快速。',
     '2026-06-11'
