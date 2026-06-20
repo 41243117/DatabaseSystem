@@ -1,10 +1,5 @@
 USE SecHand;
 
--- ============================================
--- 外部檢視 External View
--- 二手物品交易平台
--- ============================================
-
 -- 若重跑，先刪除 View
 DROP VIEW IF EXISTS Buyer_View;
 DROP VIEW IF EXISTS Seller_View;
@@ -105,7 +100,7 @@ LEFT JOIN Review r
 -- 用途：
 -- 賣家可查看自己刊登的商品、商品銷售狀態、買家、付款狀態、
 -- 出貨狀態與評價資料。
--- 此 View 主要提供賣家管理商品與安排出貨使用。
+-- 主要提供賣家管理商品與安排出貨使用。
 -- ============================================
 
 CREATE OR REPLACE VIEW Seller_View AS
@@ -260,39 +255,6 @@ LEFT JOIN ShipmentMethod sm
 
 LEFT JOIN Review r
     ON o.oID = r.oID;
-
-
--- ============================================
--- 2.4 商品狀態 View
--- 用途：
--- 依照商品狀態顯示「可購買」或「不可購買」。
--- 類似 Campus-Digital-Bookstore 用 Amount 判斷可借閱狀態。
--- ============================================
-
-CREATE OR REPLACE VIEW Product_Status_View AS
-SELECT
-    p.pID AS productID,
-    p.pName AS productName,
-    p.pCondition AS productCondition,
-    p.price AS price,
-    p.pStatus AS productStatus,
-
-    CASE
-        WHEN p.pStatus = '上架中' THEN '可購買'
-        ELSE '不可購買'
-    END AS purchaseStatus,
-
-    c.cName AS categoryName,
-    seller.mName AS sellerName
-
-FROM Product p
-JOIN Category c
-    ON p.cID = c.cID
-
-JOIN Member seller
-    ON p.mID = seller.mID
-
-ORDER BY p.pName;
 
 
 -- ============================================
