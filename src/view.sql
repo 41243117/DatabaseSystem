@@ -275,10 +275,6 @@ GRANT SELECT
 ON SecHand.Buyer_View
 TO 'buyer_user'@'localhost';
 
-GRANT SELECT
-ON SecHand.Product_Status_View
-TO 'buyer_user'@'localhost';
-
 -- 買家執行 DML 子查詢需要的 SELECT 權限
 GRANT SELECT (mID, mAccount, mName, mEmail, mPhone)
 ON SecHand.Member
@@ -336,10 +332,6 @@ TO 'buyer_user'@'localhost';
 -- 查詢 View
 GRANT SELECT
 ON SecHand.Seller_View
-TO 'seller_user'@'localhost';
-
-GRANT SELECT
-ON SecHand.Product_Status_View
 TO 'seller_user'@'localhost';
 
 -- 賣家執行 DML 子查詢需要的 SELECT 權限
