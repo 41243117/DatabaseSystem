@@ -47,8 +47,6 @@ VALUES
 -- -------------------------
 -- 1-4 買家新增付款紀錄
 -- 預期結果：成功
--- 注意：這裡 paymentStatus 先用「未付款」
--- 因為買家不應該直接把付款狀態改成已付款
 -- -------------------------
 
 INSERT INTO Invoice
@@ -74,7 +72,6 @@ VALUES
 -- -------------------------
 -- 1-5 買家新增評價
 -- 預期結果：成功
--- 注意：若你的 Review 已加入 reviewType，請用這版
 -- -------------------------
 
 INSERT INTO Review
@@ -265,7 +262,6 @@ WHERE sID = (
 -- -------------------------
 -- 2-7 賣家新增評價
 -- 預期結果：成功
--- 注意：需要 Review 已經有 reviewType 欄位
 -- -------------------------
 
 INSERT INTO Review
@@ -413,7 +409,6 @@ WHERE cName = '管理者測試分類';
 -- -------------------------
 -- 3-7 管理者建立測試 View
 -- 預期結果：成功
--- 若目前 admin_user 沒有 CREATE 權限，請在 permission.sql 補上 CREATE, DROP
 -- -------------------------
 
 CREATE OR REPLACE VIEW Admin_Test_View AS
