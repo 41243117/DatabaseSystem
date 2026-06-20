@@ -274,9 +274,6 @@ REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'admin_user'@'localhost';
 GRANT SELECT ON SecHand.Buyer_View
 TO 'buyer_user'@'localhost';
 
-GRANT SELECT ON SecHand.Product_Status_View
-TO 'buyer_user'@'localhost';
-
 -- 新增訂單相關資料
 GRANT INSERT ON SecHand.`Order`
 TO 'buyer_user'@'localhost';
@@ -310,9 +307,6 @@ TO 'buyer_user'@'localhost';
 
 -- 查詢 View
 GRANT SELECT ON SecHand.Seller_View
-TO 'seller_user'@'localhost';
-
-GRANT SELECT ON SecHand.Product_Status_View
 TO 'seller_user'@'localhost';
 
 -- 新增商品與出貨資料
